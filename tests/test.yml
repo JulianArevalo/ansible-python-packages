@@ -1,0 +1,12 @@
+---
+
+- hosts: all
+  name: Test ansible-python-packages role
+
+  vars:
+    python_packages:
+      - name: pyelftools
+      - name: requests-toolbelt
+
+  roles:
+    - role: ../../ansible-python-packages

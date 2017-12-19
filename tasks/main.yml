@@ -1,0 +1,38 @@
+---
+
+- name: Check if pip is already installed.
+  command: command -v pip > /dev/null
+  register: pip_installed
+  ignore_errors: yes
+
+- name: Install pip for macos system.
+  command: easy_install pip
+  become: yes
+  when: pip_installed.rc != 0 and ansible_distribution == "MacOSX"
+
+- name: Install pip for Ubuntu system.
+  apt:
+    name: python-pip
+    update-cache: yes
+    state: present
+  become: yes
+  when: pip_installed.rc != 0 and ansible_distribution == "Ubuntu"
+
+- name: Retrieve pip executable path
+  shell: command -v pip
+  environment:
+    # Workaround for macOS
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  register: pip_bin_path
+
+- name: Install latest python modules.
+  pip:
+    name: "{{ item.name | default(omit) }}"
+    state: present
+    version: "{{ item.version | default(omit) }}"
+    executable: "{{ pip_bin_path.stdout | default(omit) }}"
+  environment:
+    # Workaround for macOS
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  with_items: "{{ python_packages }}"
+  become: yes
