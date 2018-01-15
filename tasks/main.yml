@@ -1,31 +1,32 @@
 ---
 
-- name: Check if pip is already installed.
-  shell: command -v pip > /dev/null
-  register: pip_installed
-  ignore_errors: yes
+- name: "Install pip."
+  include: pip-install.yml
 
-- name: Install pip for macos system.
-  command: easy_install pip
-  become: yes
-  when: pip_installed.rc != 0 and ansible_distribution == "MacOSX"
-
-- name: Install pip for Ubuntu system.
-  apt:
-    name: python-pip
-    update-cache: yes
-    state: present
-  become: yes
-  when: pip_installed.rc != 0 and ansible_distribution == "Ubuntu"
-
-- name: Retrieve pip executable path
+- name: "Retrieve pip executable path on Ubuntu."
   shell: command -v pip
+  register: pip_bin_path
+  when: ansible_distribution == "Ubuntu"
+
+- name: "Retrieve pip2 executable path on macOS."
+  shell: command -v pip2
   environment:
     # Workaround for macOS
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
   register: pip_bin_path
+  when: ansible_distribution == "MacOSX"
 
-- name: Install latest python modules.
+- name: "Install latest python packages."
+  pip:
+    name: "{{ item.name | default(item) }}"
+    state: present
+    version: "{{ item.version | default(omit) }}"
+    executable: "{{ pip_bin_path.stdout | default(omit) }}"
+    extra_args: --user
+  with_items: "{{ python_packages }}"
+  when: ansible_distribution == "Ubuntu"
+
+- name: "Install latest python packages."
   pip:
     name: "{{ item.name | default(item) }}"
     state: present
@@ -35,4 +36,4 @@
     # Workaround for macOS
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
   with_items: "{{ python_packages }}"
-  become: yes
+  when: ansible_distribution == "MacOSX"

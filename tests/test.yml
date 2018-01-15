@@ -5,6 +5,7 @@
 
   vars:
     python_packages:
+      - six
       - name: pyelftools
       - name: requests-toolbelt
 

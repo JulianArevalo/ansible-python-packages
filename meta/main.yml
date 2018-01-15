@@ -16,3 +16,13 @@ galaxy_info:
     - development
     - setup
     - python
+
+dependencies:
+  - role: geerlingguy.homebrew
+    homebrew_upgrade_all_packages: no
+    homebrew_taps: []
+    homebrew_installed_packages: []
+    homebrew_cask_apps: []
+    homebrew_use_brewfile: no
+    when: ansible_distribution == "MacOSX"
+

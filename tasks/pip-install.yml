@@ -1,0 +1,31 @@
+---
+
+- name: "Check if pip is already installed."
+  shell: command -v pip > /dev/null
+  register: pip_installed
+  ignore_errors: yes
+  when: ansible_distribution == "Ubuntu"
+
+- name: "Install pip for Ubuntu system."
+  apt:
+    name: python-pip
+    update-cache: yes
+    state: present
+  become: yes
+  when: pip_installed.rc is defined and pip_installed.rc != 0 and ansible_distribution == "Ubuntu"
+
+- name: "Check if pip2 is already installed."
+  shell: command -v pip2 > /dev/null
+  environment:
+    # Workaround for macOS
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  register: pip_installed
+  ignore_errors: yes
+  when: ansible_distribution == "MacOSX"
+
+- name: "Install python."
+  homebrew:
+    name: python
+    state: present
+  ignore_errors: yes
+  when: pip_installed.rc is defined and pip_installed.rc != 0 and ansible_distribution == "MacOSX"
